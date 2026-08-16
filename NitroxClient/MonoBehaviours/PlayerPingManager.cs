@@ -44,19 +44,25 @@ internal sealed class PlayerPingManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(2))
-        {
-            queuedRaycastHit = RaycastHelper.GetClosestHitFromAim(MAX_PING_DISTANCE);
-            if (queuedRaycastHit == null)
-            {
-                // Invalid ping raycast so we play an error sound.
-                FMODEmitterController.PlayEventOneShot(PING_FAIL_SOUND, 3, Player.main.transform.position);
-            }
-        }
         if (queuedRaycastHit is { } hit && CanCreatePing())
         {
             queuedRaycastHit = null;
             CreatePing(hit.point + hit.normal * 0.5f, hit.collider.gameObject);
+        }
+    }
+
+    public static void TryQueuePing()
+    {
+        if (!instance)
+        {
+            return;
+        }
+
+        instance.queuedRaycastHit = RaycastHelper.GetClosestHitFromAim(MAX_PING_DISTANCE);
+        if (instance.queuedRaycastHit == null)
+        {
+            // Invalid ping raycast so we play an error sound.
+            FMODEmitterController.PlayEventOneShot(PING_FAIL_SOUND, 3, Player.main.transform.position);
         }
     }
 

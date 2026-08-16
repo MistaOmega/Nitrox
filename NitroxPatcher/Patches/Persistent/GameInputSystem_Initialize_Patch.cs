@@ -28,7 +28,9 @@ public partial class GameInputSystem_Initialize_Patch : NitroxPatch, IPersistent
             if (!string.IsNullOrEmpty(keyBinding.DefaultKeyboardKey))
             {
                 // See GameInputSystem.bindingsKeyboard definition
-                GameInputSystem.bindingsKeyboard.Add(button, $"<Keyboard>/{keyBinding.DefaultKeyboardKey}");
+                // Keys may specify their device (eg "<Mouse>/middleButton"). Default to <Keyboard> otherwise
+                string path = keyBinding.DefaultKeyboardKey.StartsWith("<") ? keyBinding.DefaultKeyboardKey : $"<Keyboard>/{keyBinding.DefaultKeyboardKey}";
+                GameInputSystem.bindingsKeyboard.Add(button, path);
             }
             if (!string.IsNullOrEmpty(keyBinding.DefaultControllerKey))
             {
