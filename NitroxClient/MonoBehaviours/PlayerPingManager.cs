@@ -46,7 +46,9 @@ internal sealed class PlayerPingManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(2))
         {
-            queuedRaycastHit = RaycastHelper.GetClosestHitFromAim(MAX_PING_DISTANCE);
+            SubRoot currentSub = Player.main.GetCurrentSub();
+            // we disable pings in bases as they're unreliable and a little unnecessary
+            queuedRaycastHit = currentSub && currentSub.isBase ? null : RaycastHelper.GetClosestHitFromAim(MAX_PING_DISTANCE);
             if (queuedRaycastHit == null)
             {
                 // Invalid ping raycast so we play an error sound.
