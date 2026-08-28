@@ -236,6 +236,11 @@ internal sealed class WorldServiceTest
                 Assert.AreEqual(metadata.EngineOn, metadataAfter.EngineOn);
                 Assert.AreEqual(metadata.EngineMode, metadataAfter.EngineMode);
                 Assert.AreEqual(metadata.Health, metadataAfter.Health);
+                Assert.AreEqual(metadata.IsDestroyed, metadataAfter.IsDestroyed);
+                Assert.AreEqual(metadata.DamageManagerHealth, metadataAfter.DamageManagerHealth);
+                Assert.AreEqual(metadata.SubFireHealth, metadataAfter.SubFireHealth);
+                Assert.IsTrue((metadata.DamagePointIndexes ?? []).SequenceEqual(metadataAfter.DamagePointIndexes ?? []));
+                Assert.IsTrue((metadata.RoomFires ?? []).Select(f => f.ToString()).SequenceEqual((metadataAfter.RoomFires ?? []).Select(f => f.ToString())));
                 break;
             case SeamothMetadata metadata when entityAfter.Metadata is SeamothMetadata metadataAfter:
                 Assert.AreEqual(metadata.LightsOn, metadataAfter.LightsOn);

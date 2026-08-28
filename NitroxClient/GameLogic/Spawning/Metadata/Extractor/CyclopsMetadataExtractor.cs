@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using Nitrox.Model.DataStructures;
+using Nitrox.Model.Subnautica.DataStructures.GameLogic;
 using Nitrox.Model.Subnautica.DataStructures.GameLogic.Entities.Metadata;
 using NitroxClient.GameLogic.Spawning.Metadata.Extractor.Abstract;
 using UnityEngine;
@@ -30,7 +33,53 @@ public class CyclopsMetadataExtractor : EntityMetadataExtractor<CyclopsGameObjec
         SubRoot subRoot = gameObject.RequireComponentInChildren<SubRoot>();
         bool isDestroyed = subRoot.subDestroyed || health <= 0f;
 
-        return new(silentRunning.active, shieldOn, sonarOn, engineOn, (int)motorMode, health, isDestroyed);
+        CyclopsExternalDamageManager damageManager = gameObject.RequireComponentInChildren<CyclopsExternalDamageManager>();
+        SubFire subFire = gameObject.RequireComponentInChildren<SubFire>();
+
+        int[] damagePointIndexes = GetActiveDamagePointIndexes(damageManager);
+        CyclopsFireData[] roomFires = GetActiveRoomFires(gameObject, subFire);
+
+        return new(silentRunning.active, shieldOn, sonarOn, engineOn, (int)motorMode, health, isDestroyed,
+                    damageManager.subLiveMixin.health, subFire.liveMixin.health, damagePointIndexes, roomFires);
+    }
+
+    private static int[] GetActiveDamagePointIndexes(CyclopsExternalDamageManager damageManager)
+    {
+        List<int> indexes = [];
+        for (int i = 0; i < damageManager.damagePoints.Length; i++)
+        {
+            if (damageManager.damagePoints[i].gameObject.activeSelf)
+            {
+                indexes.Add(i);
+            }
+        }
+        return indexes.ToArray();
+    }
+    
+    private static CyclopsFireData[] GetActiveRoomFires(GameObject subRootObject, SubFire subFire)
+    {
+        if (!subRootObject.TryGetIdOrWarn(out NitroxId subRootId))
+        {
+            return [];
+        }
+
+        List<CyclopsFireData> roomFires = [];
+        foreach (KeyValuePair<CyclopsRooms, SubFire.RoomFire> roomFire in subFire.roomFires)
+        {
+            for (int i = 0; i < roomFire.Value.spawnNodes.Length; i++)
+            {
+                if (roomFire.Value.spawnNodes[i].childCount > 0)
+                {
+                    if (!roomFire.Value.spawnNodes[i].GetComponentInChildren<Fire>().TryGetIdOrWarn(out NitroxId fireId))
+                    {
+                        continue;
+                    }
+
+                    roomFires.Add(new CyclopsFireData(fireId, subRootId, roomFire.Key, i));
+                }
+            }
+        }
+        return roomFires.ToArray();
     }
 
     public struct CyclopsGameObject

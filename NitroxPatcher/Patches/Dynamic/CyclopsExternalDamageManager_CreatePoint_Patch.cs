@@ -18,9 +18,9 @@ public sealed partial class CyclopsExternalDamageManager_CreatePoint_Patch : Nit
 
     public static void Postfix(CyclopsExternalDamageManager __instance, bool __state)
     {
-        if (__state)
+        if (__state && __instance.subRoot.TryGetIdOrWarn(out NitroxId id))
         {
-            Resolve<Cyclops>().OnCreateDamagePoint(__instance.subRoot);
+            Resolve<Cyclops>().BroadcastMetadataChange(id);
         }
     }
 }

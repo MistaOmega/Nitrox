@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using NitroxClient.GameLogic;
+using Nitrox.Model.DataStructures;
 
 namespace NitroxPatcher.Patches.Dynamic;
 
@@ -13,7 +14,9 @@ public sealed partial class CyclopsDamagePoint_OnRepair_Patch : NitroxPatch, IDy
 
     public static void Postfix(CyclopsDamagePoint __instance)
     {
-        // If the amount is high enough, it'll heal full
-        Resolve<Cyclops>().OnDamagePointRepaired(__instance.GetComponentInParent<SubRoot>(), __instance, 999);
+        if (__instance.GetComponentInParent<SubRoot>().TryGetIdOrWarn(out NitroxId id))
+        {
+            Resolve<Cyclops>().BroadcastMetadataChange(id);
+        }
     }
 }

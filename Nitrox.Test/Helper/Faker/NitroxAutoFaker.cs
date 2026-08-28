@@ -114,7 +114,9 @@ public class NitroxAutoFaker<T> : NitroxFaker, INitroxFaker
             {
                 if (parameterFaker is NitroxCollectionFaker collectionFaker)
                 {
-                    parameterValues[i] = Activator.CreateInstance(collectionFaker.OutputCollectionType);
+                    parameterValues[i] = collectionFaker.OutputCollectionType.IsArray
+                        ? Array.CreateInstance(collectionFaker.OutputCollectionType.GetElementType()!, 0)
+                        : Activator.CreateInstance(collectionFaker.OutputCollectionType);
                 }
                 else
                 {
