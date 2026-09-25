@@ -74,6 +74,9 @@ internal sealed partial class ServerEntry : ObservableObject
     public partial bool IsServerClosing { get; set; }
 
     [ObservableProperty]
+    public partial bool IsServerStarting { get; set; }
+
+    [ObservableProperty]
     public partial DateTime LastAccessedTime { get; set; } = DateTime.Now;
 
     private int lastProcessId;
@@ -285,6 +288,7 @@ internal sealed partial class ServerEntry : ObservableObject
         Process = ServerProcess.Start(Path.Combine(savesDir, Name), cts, embedded, existingProcessId);
 
         Output.Clear();
+        IsServerStarting = true;
         IsNewServer = false;
         IsOnline = true;
     }
@@ -419,7 +423,7 @@ internal sealed partial class ServerEntry : ObservableObject
                 // Assist server with finding launcher location.
                 if (Directory.Exists(launcherPath))
                 {
-                    startInfo.EnvironmentVariables.Add(NitroxUser.LAUNCHER_PATH_ENV_KEY, launcherPath);
+                    startInfo.EnvironmentVariables[NitroxUser.LAUNCHER_PATH_ENV_KEY] = launcherPath;
                 }
                 if (isEmbeddedMode)
                 {

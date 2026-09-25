@@ -50,32 +50,43 @@ internal sealed class VehicleDockingProcessor(Vehicles vehicles, PlayerManager p
     {
         try
         {
-            // Get the target docking position based on vehicle type (same logic as VehicleDockingBay.UpdateDockedPosition)
-            Transform dockingEndPos = vehicle is Exosuit ? dockingBay.dockingEndPosExo : dockingBay.dockingEndPos;
-
-            // Store starting position for interpolation
-            Vector3 startPosition = vehicle.transform.position;
-            Quaternion startRotation = vehicle.transform.rotation;
-
-            // Use the same interpolation time as the game (default is 1 second)
-            float interpolationTime = dockingBay.interpolationTime;
-            float elapsedTime = 0f;
-
-            // Interpolate vehicle position to docking bay (replicates VehicleDockingBay.LateUpdate behavior)
-            while (elapsedTime < interpolationTime)
+            if (vehicle is Exosuit)
             {
-                elapsedTime += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsedTime / interpolationTime);
+                // Get the target docking position based on vehicle type (same logic as VehicleDockingBay.UpdateDockedPosition)
+                Transform dockingEndPos = dockingBay.dockingEndPosExo;
+                Vector3 startPosition = vehicle.transform.position;
+                Quaternion startRotation = vehicle.transform.rotation;
 
-                vehicle.transform.position = Vector3.Lerp(startPosition, dockingEndPos.position, t);
-                vehicle.transform.rotation = Quaternion.Lerp(startRotation, dockingEndPos.rotation, t);
+                // Use the same interpolation time as the game (default is 1 second)
+                float interpolationTime = dockingBay.interpolationTime;
+                float elapsedTime = 0f;
 
-                yield return null;
+                // Interpolate vehicle position to docking bay (replicates VehicleDockingBay.LateUpdate behavior)
+                while (elapsedTime < interpolationTime)
+                {
+                    elapsedTime += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTime / interpolationTime);
+
+                    vehicle.transform.position = Vector3.Lerp(startPosition, dockingEndPos.position, t);
+                    vehicle.transform.rotation = Quaternion.Lerp(startRotation, dockingEndPos.rotation, t);
+
+                    yield return null;
+                }
+
+                // Ensure final position is exact
+                vehicle.transform.position = dockingEndPos.position;
+                vehicle.transform.rotation = dockingEndPos.rotation;
             }
-
-            // Ensure final position is exact
-            vehicle.transform.position = dockingEndPos.position;
-            vehicle.transform.rotation = dockingEndPos.rotation;
+            else if (vehicleMovementReplicator)
+            {
+                // NB: We don't have a lifetime ahead of us
+                float waitTime = Mathf.Clamp(vehicleMovementReplicator.MaxAllowedLatency, 0f, 2f);
+                yield return new WaitForSeconds(waitTime);
+            }
+            else
+            {
+                yield return Yielders.WaitFor1Second;
+            }
 
             // DockVehicle sets the rigid body kinematic of the vehicle to true, we don't want that behaviour
             // Therefore disable kinematic (again) to remove the bouncing behavior

@@ -57,6 +57,11 @@ internal sealed class EntityMetadataUpdateProcessor(PlayerManager playerManager,
                 metadataToApply = MergeEscapePodMetadata(entity, escapePodMetadata);
                 return true;
 
+            // temperature is a ratchet (see ThermalPlant.QueryTemperature's Mathf.Max), so drop stale updates instead of
+            // relaying them: every client near a thermal plant reports the same rise, and only the first one is news
+            case ThermalPlantMetadata thermalPlantMetadata:
+                return entity.Metadata is not ThermalPlantMetadata currentMetadata || thermalPlantMetadata.Temperature > currentMetadata.Temperature;
+
             default:
                 // Allow metadata updates from any player by default
                 metadataToApply = incoming;
